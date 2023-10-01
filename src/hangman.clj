@@ -1,4 +1,4 @@
-(ns hangman.hangman
+(ns hangman
   (:require [clojure.string :as str]
             [util :as util]))
 
