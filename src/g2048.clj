@@ -22,27 +22,30 @@
 
 (defn print-grid [grid]
   "Prints the grid"
-  (->> (range width)
-       (map (fn [y] (->> (range width)
-                         (map (fn [x] (get grid [x y] " ")))
-                         (str/join "  "))))
-       (reverse)
-       (str/join "\n")
-       (format)
-       (println)))
+  (let [available (range width)
+        str-length (->> grid (vals) (apply max) (str) (count))
+        pad (fn [s] (format (str "%" (- str-length) "s") s))]
+    (->> available
+         (map (fn [y] (->> available
+                           (map (fn [x] (get grid [x y] "")))
+                           (map pad)
+                           (str/join "  "))))
+         (reverse)
+         (str/join "\n")
+         (format)
+         (println))))
 
-(defn next-pos [pos dir grid]
+(defn next-pos [pos value dir grid]
   "Returns the next closest available spot for this position."
   (let [pos' (mapv + pos dir)
-        _ (println pos' (grid pos'))
         not-nil= (fn [x y] (and (not (nil? x)) (not (nil? y)) (= x y)))]
-    (cond
-          (or (grid pos')
-            (> (first pos') (dec width))
-            (> (second pos') (dec width))
-            (< (first pos') 0)
-            (< (second pos') 0)) pos
-          :else (next-pos pos' dir grid))))
+    (cond (or (> (first pos') (dec width))
+              (> (second pos') (dec width))
+              (< (first pos') 0)
+              (< (second pos') 0)) pos
+          (not-nil= (grid pos') value) pos'
+          (grid pos') pos
+          :else (next-pos pos' value dir grid))))
 
 (defn move [dir new-grid old-grid]
   "Moves all positions to their new positions. Old grid should be sorted by execution order."
@@ -50,9 +53,12 @@
     new-grid
     (let [head (first old-grid)
           pos (first head)
-          pos' (next-pos pos dir new-grid)]
+          value (second head)
+          pos' (next-pos pos value dir new-grid)]
       (move dir
-            (assoc new-grid pos' (second head))
+            (if (and (not= pos pos') (= (new-grid pos') value))
+              (assoc new-grid pos' (* 2 value))
+              (assoc new-grid pos' value))
             (rest old-grid)))))
 
 (defn random-available-pos [grid]
@@ -69,7 +75,8 @@
   (println "Moves:" moves)
   (println)
   (println "Final grid:")
-  (print-grid grid))
+  (print-grid grid)
+  nil)
 
 (defn step [grid score moves]
   (if (game-over? grid)
@@ -81,10 +88,8 @@
                 "a" [[-1 0] (partial sort (fn [[[x1 _] _] [[x2 _] _]] (compare x1 x2)))]
                 "d" [[1 0] (partial sort (fn [[[x1 _] _] [[x2 _ ] _]] (compare x2 x1)))]
                 (step grid score moves))
-          _ (println (->> grid ((second dir))))
           grid' (->> grid ((second dir)) (move (first dir) {}))
-          grid' (assoc grid' (random-available-pos grid') 2)
-          _ (println grid')]
+          grid' (assoc grid' (random-available-pos grid') 2)]
       (print-grid grid')
       (step grid'
             score
