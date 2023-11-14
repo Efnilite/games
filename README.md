@@ -1,7 +1,8 @@
 # games
 
+This is a collection of games written in Clojure. For practice.
+
 Todo:
-- 2048
 - Minesweeper
 - Chess
 - Go
