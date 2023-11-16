@@ -7,6 +7,6 @@
 (defn get-random-word [] (rand-nth words))
 
 (defn in?
-  "true if coll contains elm"
+  "true if coll contains element"
   [coll element]
   (some #(= element %) coll))
