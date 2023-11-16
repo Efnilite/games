@@ -20,7 +20,7 @@
                       (some (partial = v)))))
          (not))))
 
-(defn print-grid [grid]
+(defn print-grid! [grid]
   "Prints the grid"
   (let [available (range width)
         str-length (->> grid (vals) (apply max) (str) (count))
@@ -68,29 +68,31 @@
          (remove (set (keys grid)))
          (rand-nth))))
 
-(defn lose [grid score moves]
+(defn lose! [grid score moves]
   (println)
   (println "You lost!")
   (println "Score:" score)
   (println "Moves:" moves)
   (println)
   (println "Final grid:")
-  (print-grid grid)
+  (print-grid! grid)
   nil)
 
-(defn step [grid score moves]
+(defn step! [grid score moves]
   (if (game-over? grid)
-    (lose grid score moves)
+    (lose! grid score moves)
     (let [input (str/lower-case (read-line))
           dir (case input
                 "w" [[0 1] (partial sort (fn [[[_ y1] _] [[_ y2] _]] (compare y2 y1)))]
                 "s" [[0 -1] (partial sort (fn [[[_ y1] _] [[_ y2] _]] (compare y1 y2)))]
                 "a" [[-1 0] (partial sort (fn [[[x1 _] _] [[x2 _] _]] (compare x1 x2)))]
                 "d" [[1 0] (partial sort (fn [[[x1 _] _] [[x2 _ ] _]] (compare x2 x1)))]
-                (step grid score moves))
+                (step! grid score moves))
           grid' (->> grid ((second dir)) (move (first dir) {}))
           grid' (assoc grid' (random-available-pos grid') 2)]
-      (print-grid grid')
-      (step grid'
+      (print-grid! grid')
+      (step! grid'
             score
             (inc moves)))))
+
+(step! {} 0 0)

@@ -15,7 +15,7 @@
 
   (if (= char (.charAt word pos)) \✓ char))
 
-(defn ask'
+(defn ask!
   "Asks the next guess."
   [word attempt-count]
 
@@ -29,12 +29,10 @@
         result' (map (partial in-word word) (seq result))]
     (do (println) (println (str/join " " (seq guess))) (println (str/join " " result')))
     (cond
-      (not= 5 (count guess)) (do (println "Please enter a word with 5 letters.") (ask' word attempt-count))
+      (not= 5 (count guess)) (do (println "Please enter a word with 5 letters.") (ask! word attempt-count))
       (= \✓ (= 1 (->> result' seq distinct count))) (do (println "You won!") (println "The word was" word))
       (= max-attempt-count attempt-count) (do (println "You lost!") (println "The word was" word))
-      :else (ask' word (inc attempt-count))
+      :else (ask! word (inc attempt-count))
       )))
 
-(defn ask [] (ask' (util/get-random-word) 0))
-
-(ask)
+(ask! (util/get-random-word) 0)

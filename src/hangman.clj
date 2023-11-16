@@ -19,22 +19,22 @@
 
   (count (remove (partial util/in? (seq word)) previously-guessed)))
 
-(defn display-guesses
+(defn stringify-guesses
   "Displays the current guess count."
   [previously-guessed]
 
   (str/join (repeat (- max-guesses (incorrect-guesses previously-guessed)) \█)))
 
-(defn stats
+(defn print-stats!
   "Handles stats."
   [previously-guessed]
 
   (println)
   (println "Your guesses:" (str/join " " (sort (seq previously-guessed))))
-  (println "Your remaining guesses:" (display-guesses previously-guessed))
+  (println "Your remaining guesses:" (stringify-guesses previously-guessed))
   (println "Your progress:" (display-word previously-guessed)))
 
-(defn ask
+(defn ask!
   "Asks the next guess."
   [previously-guessed]
 
@@ -49,7 +49,7 @@
     (let [_ (do (println) (println "Enter a guess."))
           guess (first (char-array (read-line)))
           previously-guessed' (conj previously-guessed guess)]
-      (stats previously-guessed')
-      (ask previously-guessed'))))
+      (print-stats! previously-guessed')
+      (ask! previously-guessed'))))
 
-(ask #{})
+(ask! #{})
