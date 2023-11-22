@@ -105,3 +105,5 @@
       (step! (-> grid
                  (dissoc pos)
                  (assoc to value))))))
+
+(step! grid)
