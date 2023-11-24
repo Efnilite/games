@@ -1,4 +1,4 @@
-(ns g2048
+(ns tofe
   (:require [clojure.string :as str]))
 
 (def width 4)
