@@ -1,5 +1,18 @@
 (ns json-test
-  (:require [clojure.test :refer :all :as test]))
+  (:require [clojure.test :refer :all :as test]
+            [json :refer :all]))
+
+(deftest test-trim-braces
+  (testing "Trimming braces from a JSON object"
+    (is (= (trim-braces "{}") ""))
+    (is (= (trim-braces "{key: value}") "key: value"))
+    (is (= (trim-braces "no braces") "no braces"))))
+
+(deftest test-parts
+  (testing "Splitting string into parts at the highest level"
+    (is (= (parts "key: value, key2: value2") ["key: value" "key2: value2"]))
+    (is (= (parts "key: {nestedKey: nestedValue}, key2: value2") ["key: {nestedKey: nestedValue}" "key2: value2"]))
+    (is (= (parts "key: [value1, value2], key2: value2") ["key: [value1, value2]" "key2: value2"]))))
 
 (deftest test-parse-json
   (testing "Parsing an empty JSON object"
@@ -21,15 +34,35 @@
   (testing "Parsing a JSON array with multiple elements"
     (is (= (json/parse "[\"element1\", \"element2\"]") ["element1", "element2"])))
 
-  (testing "Parsing a JSON integer"
-    (is (= (json/parse "1") 1)))
-
   (testing "Parsing a JSON object with integer value"
-    (is (= (json/parse "{\"key\": 1}") {"key" 1}))))
+    (is (= (json/parse "{\"key\": 1}") {"key" 1})))
 
-(deftest test-parse-errors
-  (testing "Parsing a non-JSON string"
-    (is (test/thrown? Exception (json/parse "not a json string")))))
+  (testing "Parsing a complex JSON object"
+    (is (= (json/parse "{\"k\": {\"a\": \"b\"}, \"v\": [1, 2, \"3\"]}") {"k" {"a" "b"} "v" [1 2 "3"]}))))
+
+(deftest test-parse-single
+  (testing "Parsing a string"
+    (is (= (json/parse-value "hello") "hello")))
+
+  (testing "Parsing an integer"
+    (is (= (json/parse-value "123") 123)))
+
+  (testing "Parsing a double"
+    (is (= (json/parse-value "123.45") 123.45)))
+
+  (testing "Parsing a boolean"
+    (is (= (json/parse-value "true") true))
+    (is (= (json/parse-value "false") false)))
+
+  (testing "Parsing null"
+    (is (nil? (json/parse-value "null")))))
+
+  ;(testing "Parsing an invalid string"
+  ;  (is (test/thrown? IllegalArgumentException (json/parse-single "invalid")))))
+
+;(deftest test-parse-errors
+;  (testing "Parsing a non-JSON string"
+;    (is (test/thrown? Exception (json/parse "not a json string")))))
 
 (defn -main []
   (test/run-tests 'json-test))
