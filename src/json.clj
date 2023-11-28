@@ -12,7 +12,7 @@
 (defn parts [s]
   "Returns all parts separated by commas on the highest level."
   ((fn step [parts part-so-far rem char-count]
-     (let [parts' (conj parts (str/trim part-so-far))
+     (let [parts' (conj parts part-so-far)
            c (first rem)
            next? (and (= \, c) (zero? char-count))]
        (if (zero? (count rem))
@@ -42,19 +42,32 @@
     (cond
       (re-matches #"\[(.*)\]" trimmed)
       (as-> (subs s 1 (- (count s) 1)) s'
-            (str/split s' #",")
-            (mapv (comp str/trim parse) s'))
+            (str/split s' #", ?")
+            (mapv parse s'))
 
       (= trimmed s)
       (parse-value s)
 
       :else
       (->> (parts trimmed)
-           (map (fn [s'] (mapv str/trim (str/split s' #":" 2))))
+           (map (fn [s'] (str/split s' #": ?" 2)))
            (map (fn [[k v]] [k (parse v)]))
            (into {})))))
 
-(defn stringify [map]
-  "Stringifies a map to a JSON object."
+(defn stringify [x]
+  "Stringifies x to a JSON object."
+  (cond (map? x)
+        (str "{"
+             (->> x
+                  (map (fn [[k v]] (str "\"" k "\": " (stringify v))))
+                  (str/join #", "))
+             "}")
 
-  )
+        (or (vector? x) (list? x))
+        (str "["
+             (->> x
+                  (map stringify)
+                  (str/join #", "))
+             "]")
+
+        :else x))
