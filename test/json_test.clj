@@ -2,28 +2,16 @@
   (:require [clojure.test :refer :all :as test]
             [json :refer :all]))
 
-(deftest test-trim-braces
-  (testing "Trimming braces from a JSON object"
-    (is (= (trim-braces "{}") ""))
-    (is (= (trim-braces "{key: value}") "key: value"))
-    (is (= (trim-braces "no braces") "no braces"))))
-
-(deftest test-parts
-  (testing "Splitting string into parts at the highest level"
-    (is (= (parts "key: value, key2: value2") ["key: value" "key2: value2"]))
-    (is (= (parts "key: {nestedKey: nestedValue}, key2: value2") ["key: {nestedKey: nestedValue}" "key2: value2"]))
-    (is (= (parts "key: [value1, value2], key2: value2") ["key: [value1, value2]" "key2: value2"]))))
-
 (deftest test-parse-json
   (testing "Parsing an empty JSON object"
     (is (= (json/parse "{}") {})))
 
   (testing "Parsing a JSON object with one key-value pair"
-    (is (= (json/parse "{\"key\": \"value\"}") {"key" "value"})))
+    (is (= (json/parse "{\"key\": \"value\"}") {:key "value"})))
 
   (testing "Parsing a JSON object with multiple key-value pairs"
     (is (= (json/parse "{\"key1\": \"value1\", \"key2\": 2}")
-           {"key1" "value1" "key2" 2})))
+           {:key1 "value1" :key2 2})))
 
   (testing "Parsing an empty JSON array"
     (is (= (json/parse "[]") [])))
@@ -35,12 +23,12 @@
     (is (= (json/parse "[\"element1\", \"element2\"]") ["element1", "element2"])))
 
   (testing "Parsing a JSON object with integer value"
-    (is (= (json/parse "{\"key\": 1}") {"key" 1})))
+    (is (= (json/parse "{\"key\": 1}") {:key 1})))
 
   (testing "Parsing a complex JSON object"
-    (is (= (json/parse "{\"k\": {\"a\": \"b\"}, \"v\": [1, 2, \"3\"]}") {"k" {"a" "b"} "v" [1 2 "3"]}))))
+    (is (= (json/parse "{\"k\": {\"a\": \"b\"}, \"v\": [1, 2, \"3\"]}") {:k {:a "b"} :v [1 2 "3"]}))))
 
-(deftest test-parse-single
+(deftest test-parse-value
   (testing "Parsing a string"
     (is (= (json/parse-value "hello") "hello")))
 

@@ -3,18 +3,18 @@
 
 ; todo commas in strings causing problems seperating in parts method
 
-(defn trim-braces [s]
+(defn- trim-braces [s]
   "Trims braces from JSON object."
   (if (and (= \{ (first s)) (= \} (last s)))
     (subs s 1 (- (count s) 1))
     s))
 
-(defn parts [s]
+(defn- parts [s]
   "Returns all parts separated by commas on the highest level."
-  ((fn step [parts part-so-far rem char-count]
+  ((fn step [parts part-so-far rem char-count in-string?]
      (let [parts' (conj parts part-so-far)
            c (first rem)
-           next? (and (= \, c) (zero? char-count))]
+           next? (and (= \, c) (zero? char-count) (not in-string?))]
        (if (zero? (count rem))
          parts'
          (step
@@ -24,13 +24,26 @@
            (cond
              (or (= c \{) (= c \[)) (inc char-count)
              (or (= c \}) (= c \])) (dec char-count)
-             :else char-count)))))
+             :else char-count)
+           (if (not in-string?)
+             (or (= c \") (= c \'))
+             (and (not (or (= c \") (= c \'))) (not (= \\ (last part-so-far)))))))))
 
-   [] "" s 0))
+   [] "" s 0 false))
+
+(defn- parse-key [s]
+  "Parses a key to a string or keyword."
+  (if (re-matches #"(\"|')(.*)(\"|')" s)
+    (-> (re-find #"(\"|')(.*)(\"|')" s)
+        (nth 2)
+        (keyword))
+
+    (keyword s)))
 
 (defn parse-value [s]
   "Parses a value to a primitive or string."
-  (cond (re-matches #"[0-9]*" s) (Integer/parseInt s)
+  (cond (re-matches #"(\"|')(.*)(\"|')" s) (nth (re-find #"(\"|')(.*)(\"|')" s) 2)
+        (re-matches #"[0-9]*" s) (Integer/parseInt s)
         (re-matches #"[0-9]+\.[0-9]+" s) (parse-double s)
         (re-matches #"(true|false)" s) (parse-boolean s)
         (= "null" s) nil
@@ -51,7 +64,7 @@
       :else
       (->> (parts trimmed)
            (map (fn [s'] (str/split s' #": ?" 2)))
-           (map (fn [[k v]] [k (parse v)]))
+           (map (fn [[k v]] [(parse-key k) (parse v)]))
            (into {})))))
 
 (defn stringify [x]
@@ -59,7 +72,7 @@
   (cond (map? x)
         (str "{"
              (->> x
-                  (map (fn [[k v]] (str "\"" k "\": " (stringify v))))
+                  (map (fn [[k v]] (str "\"" (name k) "\": " (stringify v))))
                   (str/join #", "))
              "}")
 
