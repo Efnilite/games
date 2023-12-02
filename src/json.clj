@@ -1,8 +1,6 @@
 (ns json
   (:require [clojure.string :as str]))
 
-; todo commas in strings causing problems seperating in parts method
-
 (defn- trim-braces [s]
   "Trims braces from JSON object."
   (if (and (= \{ (first s)) (= \} (last s)))
@@ -11,13 +9,13 @@
 
 (defn- parts [s]
   "Returns all parts separated by commas on the highest level."
-  ((fn step [parts part-so-far rem char-count in-string?]
+  (loop [parts [] part-so-far "" rem s char-count 0 in-string? false]
      (let [parts' (conj parts part-so-far)
            c (first rem)
            next? (and (= \, c) (zero? char-count) (not in-string?))]
        (if (zero? (count rem))
          parts'
-         (step
+         (recur
            (if next? parts' parts)
            (if next? "" (str part-so-far c))
            (rest rem)
@@ -27,9 +25,7 @@
              :else char-count)
            (if (not in-string?)
              (or (= c \") (= c \'))
-             (and (not (or (= c \") (= c \'))) (not (= \\ (last part-so-far)))))))))
-
-   [] "" s 0 false))
+             (and (not (or (= c \") (= c \'))) (not (= \\ (last part-so-far))))))))))
 
 (defn- parse-key [s]
   "Parses a key to a string or keyword."
